@@ -4,7 +4,7 @@
 
 * https://infotraining.bitbucket.io/cpp-adv
 
-## Konfiguracja lokalna - toolchain
+## Konfiguracja lokalna - opcja 1
 
 Jeśli uczestnik chce skonfigurować lokalnie swoje środowisko, to należy zainstalować:
 
@@ -20,7 +20,7 @@ Jeśli uczestnik chce skonfigurować lokalnie swoje środowisko, to należy zain
   cmake --version
   ```
 
-## Zdalna maszyna wirtualna (SSH)
+## Zdalna maszyna wirtualna (SSH) - opcja 2
 
 * link do rejestracji: https://labs.azure.com/register/rrteny9y
   - uczestnik powinien mieć konto Github lub Microsoft
