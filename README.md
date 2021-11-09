@@ -3,13 +3,6 @@
 ## Dokumentacja + slajdy
 
 * https://infotraining.bitbucket.io/cpp-adv
-* https://gitpitch.com/infotraining-dev/cpp-adv/develop?grs=bitbucket&p=slides_pl#/
-
-## Zdalna maszyna wirtualna (SSH)
-
-* link do rejestracji: https://labs.azure.com/register/rrteny9y
-  - uczestnik powinien mieć konto Github lub Microsoft
-  - ustawić swoje hasło przy rejestracji
 
 ## Konfiguracja lokalna - toolchain
 
@@ -26,6 +19,12 @@ Jeśli uczestnik chce skonfigurować lokalnie swoje środowisko, to należy zain
   ```
   cmake --version
   ```
+
+## Zdalna maszyna wirtualna (SSH)
+
+* link do rejestracji: https://labs.azure.com/register/rrteny9y
+  - uczestnik powinien mieć konto Github lub Microsoft
+  - ustawić swoje hasło przy rejestracji
 
 ## Visual Studio Code
 
