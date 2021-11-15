@@ -122,3 +122,17 @@ TEST_CASE("move semantics - UniquePtr")
 
     std::cout << "****\n";
 }
+
+TEST_CASE("container of moveable object")
+{
+    std::vector<UniquePtr<Gadget>> gadgets;
+
+    gadgets.push_back(create_gadget());
+    gadgets.push_back(create_gadget());
+
+    UniquePtr<Gadget> g = create_gadget();
+    gadgets.push_back(std::move(g));
+
+    for(const auto& g : gadgets)
+        g->use();
+}
