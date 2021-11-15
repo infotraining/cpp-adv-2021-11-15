@@ -45,6 +45,24 @@ namespace LegacyCode
             return *this;
         }
 
+        Paragraph(Paragraph&& other)
+            : buffer_ {other.buffer_}
+        {
+            other.buffer_ = nullptr;
+        }
+
+        Paragraph& operator=(Paragraph&& other)
+        {
+            if (this != &other)
+            {
+                delete[] buffer_;
+             
+                buffer_ = other.buffer_;
+                other.buffer_ = nullptr;
+            }
+            return *this;
+        }
+
         void set_paragraph(const char* txt)
         {
             std::strcpy(buffer_, txt);
@@ -74,7 +92,6 @@ public:
     virtual void draw() const = 0;
 };
 
-// TODO - ensure that Text is copyable & moveable type
 class Text : public Shape
 {
     int x_, y_;
@@ -82,9 +99,9 @@ class Text : public Shape
 
 public:
     Text(int x, int y, const std::string& text)
-        : x_{x}
-        , y_{y}
-        , p_{text.c_str()}
+        : x_ {x}
+        , y_ {y}
+        , p_ {text.c_str()}
     {
     }
 
@@ -117,7 +134,9 @@ struct ShapeGroup : public Shape
             s->draw();
     }
 
-    // TODO - implement adding a shape to a shapes container
+    void add(std::unique_ptr<Shape> shape){
+        shapes.push_back(std::move(shape));
+    }
 };
 
 #endif /*PARAGRAPH_HPP_*/

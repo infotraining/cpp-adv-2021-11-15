@@ -212,6 +212,20 @@ struct AllByDefault
     DataSet ds;
 };
 
+struct RuleOfFive
+{
+    int id;
+    std::string str;
+    std::vector<int> vec;
+    DataSet ds;
+
+    ~RuleOfFive() {}
+    RuleOfFive(const RuleOfFive&) = default;
+    RuleOfFive& operator=(const RuleOfFive&) = default;
+    RuleOfFive(RuleOfFive&&) = default;
+    RuleOfFive& operator=(RuleOfFive&&) = default;
+};
+
 TEST_CASE("AllByDefault")
 {
     AllByDefault abd{665, "abd", {1, 2, 3}, DataSet{"ds", Data{"a", {1, 2, 3}}, Data{"b", {4, 5, 6}}}};
