@@ -95,23 +95,42 @@ void use(UniquePtr<Gadget> ptr_g)
         ptr_g->use();
 }
 
+template <typename T>
+UniquePtr<T> MakeUnique()
+{
+    return UniquePtr<T>{new T()};
+}
+
+template <typename T, typename TArg>
+UniquePtr<T> MakeUnique(TArg&& arg)
+{
+    return UniquePtr<T>{new T(std::forward<TArg>(arg))};
+}
+
+template <typename T, typename TArg1, typename TArg2>
+UniquePtr<T> MakeUnique(TArg1&& arg1, TArg2&& arg2)
+{
+    return UniquePtr<T>{new T(std::forward<TArg1>(arg1), std::forward<TArg2>(arg2))};
+}
+
+
 TEST_CASE("move semantics - UniquePtr")
 {
-    UniquePtr<Gadget> pg1 {new Gadget {1, "ipad"}};
+    UniquePtr<Gadget> pg1 = MakeUnique<Gadget>(1, "ipad");
     pg1->use();
 
     UniquePtr<Gadget> pg2 = std::move(pg1); // explicit
     pg2->use();
 
-    UniquePtr<Gadget> pg3 {new Gadget {2, "smartwatch"}};
+    UniquePtr<Gadget> pg3 = MakeUnique<Gadget>(2, "smartwatch");
     pg3->use();
 
     pg3 = std::move(pg3); // explicit move
 
-    UniquePtr<Gadget> pg4 = UniquePtr<Gadget>(new Gadget{3, "smart-tv"}); // implicit move
+    UniquePtr<Gadget> pg4 = MakeUnique<Gadget>(3, "smart-tv"); // implicit move
     pg4->use();
 
-    pg4 = UniquePtr<Gadget>{new Gadget{4, "roomba"}}; // implicit move
+    pg4 = MakeUnique<Gadget>(4, "roomba"); // implicit move
     pg4->use();
 
     UniquePtr<Gadget> pg5 = create_gadget();
@@ -135,4 +154,20 @@ TEST_CASE("container of moveable object")
 
     for(const auto& g : gadgets)
         g->use();
+}
+
+TEST_CASE("perfect forwarding & memory leaks")
+{
+    std::vector<Gadget> gadgets;
+    gadgets.push_back(Gadget{1, "ipad"});
+    gadgets.emplace_back(2, "smart-tv");
+
+    SECTION("avoid memory leaks with make_unique")
+    {
+        std::vector<std::unique_ptr<Gadget>> gadget_ptrs;
+
+        gadget_ptrs.push_back(std::make_unique<Gadget>(1, "ipad"));
+        //gadget_ptrs.emplace_back(new Gadget{2, "smart-tv"}); // potential memory leak
+        gadget_ptrs.emplace_back(std::make_unique<Gadget>(3, "smart-watch")); // leak-free 
+    }
 }
