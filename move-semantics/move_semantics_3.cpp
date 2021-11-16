@@ -187,7 +187,7 @@ public:
 
 TEST_CASE("DataSet")
 {
-    Data d{"a", {1, 2, 3}};
+    Data d {"a", {1, 2, 3}};
     DataSet ds("dataset", d, Data {"b", {3, 4, 5}});
     print("d", d);
     ds.print_rows();
@@ -197,7 +197,7 @@ TEST_CASE("DataSet")
     DataSet target = std::move(ds);
     target.print_rows();
 
-    target = DataSet{"new-dataset", d, Data{"c", {6, 7, 8, 9, 0, 3}}};
+    target = DataSet {"new-dataset", d, Data {"c", {6, 7, 8, 9, 0, 3}}};
     target.print_rows();
 
     DataSet backup = target;
@@ -219,7 +219,7 @@ struct RuleOfFive
     std::vector<int> vec;
     DataSet ds;
 
-    ~RuleOfFive() {}
+    ~RuleOfFive() { std::cout << "Log: object being destroyed!\n"; }
     RuleOfFive(const RuleOfFive&) = default;
     RuleOfFive& operator=(const RuleOfFive&) = default;
     RuleOfFive(RuleOfFive&&) = default;
@@ -228,11 +228,122 @@ struct RuleOfFive
 
 TEST_CASE("AllByDefault")
 {
-    AllByDefault abd{665, "abd", {1, 2, 3}, DataSet{"ds", Data{"a", {1, 2, 3}}, Data{"b", {4, 5, 6}}}};
+    AllByDefault abd {665, "abd", {1, 2, 3}, DataSet {"ds", Data {"a", {1, 2, 3}}, Data {"b", {4, 5, 6}}}};
 
     AllByDefault backup = abd;
 
     std::cout << "\n##############\n";
 
     AllByDefault target = std::move(abd);
+}
+
+namespace ModernCpp
+{
+    class Data
+    {
+        std::string name_;
+        std::vector<int> data_;
+
+    public:
+        using iterator = std::vector<int>::iterator;
+        using const_iterator = std::vector<int>::const_iterator;
+
+        Data(std::string name, std::initializer_list<int> list)
+            : name_ {std::move(name)}
+            , data_ {list}
+        {
+            std::cout << "Data(" << name_ << ")\n";
+        }
+
+        void swap(Data& other)
+        {
+            name_.swap(other.name_);
+            data_.swap(other.data_);
+        }
+
+        iterator begin()
+        {
+            return data_.begin();
+        }
+
+        iterator end()
+        {
+            return data_.end();
+        }
+
+        const_iterator begin() const
+        {
+            return data_.begin();
+        }
+
+        const_iterator end() const
+        {
+            return data_.end();
+        }
+    };
+}
+
+/////////////////////////////////////////////////////////////
+
+struct Point
+{
+    int x, y;
+};
+
+class Complex
+{
+    double re_ {};
+    double img_ {};
+
+public:
+    Complex() = default;
+
+    Complex(double r, double i)
+        : re_ {r}
+        , img_ {i}
+    {
+    }
+};
+
+TEST_CASE("uniform init syntax")
+{
+    SECTION("C++98")
+    {
+        int x1 = 10;
+        int x2(10);
+        int x3 = int(20);
+        // int x4(); // most vexing parse
+
+        Point pt1 {1, 2};
+        Point pt2 = {1, 6};
+
+        Complex c(1.1, 5.5);
+
+        int tab1[5] = {1, 2, 3, 4, 5};
+        int tab2[5] {1, 2, 3, 4, 6};
+
+        std::vector<int> vec;
+        vec.push_back(1);
+        vec.push_back(2);
+    }
+
+    SECTION("C++11")
+    {
+        int x1 = 10;
+        int x2 {10};
+        int x3 = int {20};
+        int x4 {}; // int == 0
+        int* ptr {};
+        REQUIRE(ptr == nullptr);
+
+        Point pt1 {1, 2};
+        Point pt2 = {1, 6};
+
+        Complex c {1.1, 5.5};
+
+        int tab1[5] = {1, 2, 3, 4, 5};
+        int tab2[5] {1, 2, 3, 4, 6};
+
+        const std::vector<int> vec = {1, 2, 3, 4};
+    }
 }
