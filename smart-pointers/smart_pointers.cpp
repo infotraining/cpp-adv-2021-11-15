@@ -280,3 +280,10 @@ TEST_CASE("enable_shared_from_this")
 
     devs.push_back(dev->get_dev_ptr());
 }
+
+TEST_CASE("unique_ptr & shared_ptr")
+{
+    std::shared_ptr<Gadget> sp = ModernCpp::get_gadget("ipad4");
+
+    auto sp2 = sp;
+}
