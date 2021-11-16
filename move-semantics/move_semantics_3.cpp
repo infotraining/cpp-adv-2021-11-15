@@ -46,7 +46,7 @@ public:
 
     /////////////////////////////////////////////////
     // move constructor
-    Data(Data&& other)
+    Data(Data&& other) noexcept
         : name_ {std::move(other.name_)}
         , data_ {other.data_}
         , size_ {other.size_}
@@ -59,7 +59,7 @@ public:
 
     /////////////////////////////////////////////////
     // move assignment
-    Data& operator=(Data&& other)
+    Data& operator=(Data&& other) noexcept(noexcept(other.swap(std::declval<Data>())))
     {
         if (this != &other)
         {
@@ -83,12 +83,12 @@ public:
         return *this;
     }
 
-    ~Data()
+    ~Data() noexcept
     {
         delete[] data_;
     }
 
-    void swap(Data& other)
+    void swap(Data& other) noexcept(noexcept(std::declval<std::string>().swap(std::declval<std::string>())))
     {
         name_.swap(other.name_);
         std::swap(data_, other.data_);
@@ -346,4 +346,48 @@ TEST_CASE("uniform init syntax")
 
         const std::vector<int> vec = {1, 2, 3, 4};
     }
+}
+
+TEST_CASE("noexcept")
+{
+    std::cout << "\n\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n\n";
+
+    std::vector<Data> vec;
+
+    vec.push_back(Data {"a", {1, 2, 3}});
+    std::cout << "-----\n";
+    vec.push_back(Data {"b", {1, 2, 3}});
+    std::cout << "-----\n";
+    vec.push_back(Data {"c", {1, 2, 3}});
+    std::cout << "-----\n";
+    vec.push_back(Data {"d", {1, 2, 3}});
+    std::cout << "-----\n";
+    vec.push_back(Data {"e", {1, 2, 3}});
+    std::cout << "-----\n";
+    vec.push_back(Data {"f", {1, 2, 3}});
+}
+
+std::string foo()
+{
+    return "abc";
+}
+
+class X
+{
+public:
+    X() = delete;
+
+    std::string bar()
+    {
+        return "abc";
+    }
+};
+
+TEST_CASE("declval")
+{
+    decltype(foo()) s; 
+
+    std::vector<decltype(foo())> words;   
+
+    decltype(std::declval<X>().bar()) obj;
 }
