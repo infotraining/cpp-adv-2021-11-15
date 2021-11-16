@@ -217,6 +217,20 @@ public:
     {
         q_.emplace_back(std::forward<TArg1>(arg1), std::forward<TArg2>(arg2));
     }
+
+    void pop(T& item)
+    {
+        if constexpr(std::is_nothrow_move_assignable_v<T>)
+        {
+            item = std::move(q_.back()); 
+        }
+        else
+        {
+            item = q_.back(); 
+        }
+        
+        q_.pop_back();
+    }
 };
 
 TEST_CASE("Queue")
@@ -227,4 +241,7 @@ TEST_CASE("Queue")
     q.push(g);
     q.push(Gadget{2, "smart-tv"});
     q.emplace(3, "smart-watch");
+
+    Gadget g;
+    q.pop(g);
 }
