@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <list>
 
 using namespace std;
 
@@ -188,3 +189,143 @@ TEST_CASE("return types")
         ver_2::get_nth(vec, 1) = 1;
     }
 }
+
+/////////////////////////////////////////////////////////////////////////
+/// CLASS TEMPLATES
+
+
+template<typename T>
+class Holder
+{
+    T value_;
+public:
+    Holder(const T& val) : value_(val)
+    {}
+
+    Holder(T&& val) : value_(std::move(val))
+    {}
+
+    T& value()
+    {
+        return value_;
+    }
+
+    const T& value() const
+    {
+        return value_;
+    } 
+};
+
+
+/////////////////
+// Array
+
+template <typename T, size_t N>
+struct Array
+{
+    T items_[N];
+
+    using iterator = T*;
+    using const_iterator = const T*;
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
+
+    iterator begin()
+    {
+        return items_;
+    }
+
+    iterator end()
+    {
+        return items_ + N;
+    }
+
+    const_iterator begin() const 
+    {
+        return items_;
+    }
+
+    const_iterator end() const
+    {
+        return items_ + N;
+    }
+
+    size_t size() const
+    {
+        return N;
+    }
+
+    reference operator[](size_t index)
+    {
+        return items_[index];
+    }
+
+    const_reference operator[](size_t index) const
+    {
+        return items_[index];
+    }
+};
+
+TEST_CASE("class templates")
+{
+    std::cout << "\n-----------------------------------\n";
+
+    Holder<int> h1{42};
+    REQUIRE(h1.value() == 42);
+
+    Holder<std::string> h2 = "text"s;
+    REQUIRE(h2.value() == "text"s);
+
+    std::vector<int> vec = {1, 2, 3};
+    Holder<std::vector<int>> h3 = std::move(vec);
+    REQUIRE(h3.value() == std::vector{1, 2, 3});
+
+    const Holder<int> h4{42};
+    REQUIRE(h4.value() == 42);
+
+    Array<int, 4> arr = {1, 2, 3, 4};
+
+    for(const auto& item : arr)
+        std::cout << item << " ";
+    std::cout << "\n";
+}
+
+struct Rectangle
+{
+    int width, height;
+    double rotate;
+
+    int area() const
+    {
+        return width * height;
+    }
+};
+
+TEST_CASE("Aggregates")
+{
+    Rectangle r1{10, 20, 45.0};
+    Rectangle r2{50, 5};
+    Rectangle r3{};
+
+    Rectangle r4 = {1, 4, 45.0};
+
+    static_assert(std::is_aggregate_v<Rectangle>);
+
+    int tab[10] = {};
+}
+
+template <typename T, template<typename, typename> class Container>
+class Stack
+{
+public:
+    Container<T, std::allocator<T>> items_;
+};
+
+TEST_CASE("template as template params")
+{
+    Stack<int, std::vector> s1;
+    Stack<int, std::list> s2;
+}
+
+
