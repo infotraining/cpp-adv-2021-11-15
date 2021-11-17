@@ -38,8 +38,8 @@ namespace LegacyCode
 
     void use_gadget(Gadget* g)
     {
-        if (g)
-            std::cout << "Using " << g->name() << "\n";
+        // if (g)
+        //     std::cout << "Using " << g->name() << "\n"; // SEGFAULT
     }
 }
 
@@ -122,7 +122,7 @@ TEST_CASE("Legacy hell with dynamic memory")
 
         use(g);
 
-        std::cout << g->name() << std::endl; // UB - use after delete
+        //std::cout << g->name() << std::endl; // UB - use after delete
     }
 }
 
