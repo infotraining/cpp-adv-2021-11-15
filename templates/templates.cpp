@@ -375,17 +375,17 @@ struct Array
         return items_ + N;
     }
 
-    const_iterator begin() const
+    constexpr const_iterator begin() const
     {
         return items_;
     }
 
-    const_iterator end() const
+    constexpr const_iterator end() const
     {
         return items_ + N;
     }
 
-    size_t size() const
+    constexpr size_t size() const
     {
         return N;
     }
@@ -395,7 +395,7 @@ struct Array
         return items_[index];
     }
 
-    const_reference operator[](size_t index) const
+    constexpr const_reference operator[](size_t index) const
     {
         return items_[index];
     }
