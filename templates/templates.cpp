@@ -1,9 +1,13 @@
 #include "catch.hpp"
 #include <iostream>
+#include <list>
+#include <map>
+#include <numeric>
+#include <optional>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
-#include <list>
 
 using namespace std;
 
@@ -193,29 +197,159 @@ TEST_CASE("return types")
 /////////////////////////////////////////////////////////////////////////
 /// CLASS TEMPLATES
 
-
-template<typename T>
+template <typename T>
 class Holder
 {
     T value_;
+
 public:
-    Holder(const T& val) : value_(val)
-    {}
+    Holder(const T& val)
+        : value_(val)
+    {
+    }
 
-    Holder(T&& val) : value_(std::move(val))
-    {}
+    Holder(T&& val)
+        : value_(std::move(val))
+    {
+    }
 
-    T& value()
+    template <typename... Args>
+    Holder(std::in_place_t, Args&&... args)
+        : value_(std::forward<Args>(args)...)
+    {
+    }
+
+    T& value() noexcept
     {
         return value_;
     }
 
-    const T& value() const
+    const T& value() const noexcept
     {
         return value_;
-    } 
+    }
 };
 
+template <typename T>
+class Holder<T*>
+{
+    std::unique_ptr<T> value_;
+
+public:
+    Holder(T* val)
+        : value_(val)
+    {
+        assert(value_ != nullptr);
+    }
+
+    T& value() noexcept
+    {
+        return *value_;
+    }
+
+    const T& value() const noexcept
+    {
+        return *value_;
+    }
+
+    T* get() const
+    {
+        return value_.get();
+    }
+};
+
+template <>
+class Holder<const char*>
+{
+    std::string value_;
+
+public:
+    Holder(const char* val)
+        : value_(val)
+    {
+    }
+
+    std::string& value() noexcept
+    {
+        return value_;
+    }
+
+    const std::string& value() const noexcept
+    {
+        return value_;
+    }
+};
+
+TEST_CASE("class templates")
+{
+    std::cout << "\n-----------------------------------\n";
+
+    Holder<int> h1 {42};
+    REQUIRE(h1.value() == 42);
+
+    Holder<std::string> h2 = "text"s;
+    REQUIRE(h2.value() == "text"s);
+
+    std::vector<int> vec = {1, 2, 3};
+    Holder<std::vector<int>> h3 = std::move(vec);
+    REQUIRE(h3.value() == std::vector {1, 2, 3});
+
+    const Holder<int> h4 {42};
+    REQUIRE(h4.value() == 42);
+
+    Holder<int*> h5(new int(13));
+    REQUIRE(h5.value() == 13);
+    REQUIRE(h5.get() != nullptr);
+
+    Holder<const char*> h6("text");
+    REQUIRE(h6.value() == "text"s);
+
+    std::optional<std::string> os1("aaa");
+    std::optional<std::string> os2(std::in_place, 'a', 3);
+
+    Holder<std::string> h7(std::in_place, 3, 'a'); // Holder(in_place, 3, 'a') -> std::string(3, 'a')
+    REQUIRE(h7.value() == "aaa"s);
+
+    Holder<std::string> h8(std::in_place, "aabb", 2);
+    REQUIRE(h8.value() == "aa");
+}
+
+struct Rectangle
+{
+    int width, height;
+    double rotate;
+
+    int area() const
+    {
+        return width * height;
+    }
+};
+
+TEST_CASE("Aggregates")
+{
+    Rectangle r1 {10, 20, 45.0};
+    Rectangle r2 {50, 5};
+    Rectangle r3 {};
+
+    Rectangle r4 = {1, 4, 45.0};
+
+    static_assert(std::is_aggregate_v<Rectangle>);
+
+    int tab[10] = {};
+}
+
+template <typename T, template <typename, typename> class Container>
+class Stack
+{
+public:
+    Container<T, std::allocator<T>> items_;
+};
+
+TEST_CASE("template as template params")
+{
+    Stack<int, std::vector> s1;
+    Stack<int, std::list> s2;
+}
 
 /////////////////
 // Array
@@ -241,7 +375,7 @@ struct Array
         return items_ + N;
     }
 
-    const_iterator begin() const 
+    const_iterator begin() const
     {
         return items_;
     }
@@ -267,65 +401,171 @@ struct Array
     }
 };
 
-TEST_CASE("class templates")
+TEST_CASE("Array")
 {
-    std::cout << "\n-----------------------------------\n";
-
-    Holder<int> h1{42};
-    REQUIRE(h1.value() == 42);
-
-    Holder<std::string> h2 = "text"s;
-    REQUIRE(h2.value() == "text"s);
-
-    std::vector<int> vec = {1, 2, 3};
-    Holder<std::vector<int>> h3 = std::move(vec);
-    REQUIRE(h3.value() == std::vector{1, 2, 3});
-
-    const Holder<int> h4{42};
-    REQUIRE(h4.value() == 42);
-
     Array<int, 4> arr = {1, 2, 3, 4};
 
-    for(const auto& item : arr)
+    for (const auto& item : arr)
         std::cout << item << " ";
     std::cout << "\n";
 }
 
-struct Rectangle
-{
-    int width, height;
-    double rotate;
+/////////////////////////////////
+// aliases
 
-    int area() const
+template <typename TValue>
+using Dictionary = std::map<std::string, TValue>;
+
+template <typename T>
+struct Identity
+{
+    using type = T;
+};
+
+template <typename T>
+using Identity_t = typename Identity<T>::type;
+
+TEST_CASE("template aliases")
+{
+    Dictionary<int> dict;
+
+    dict.emplace("five", 5);
+    dict.emplace("six", 6);
+
+    static_assert(std::is_same_v<Identity_t<int>, int>);
+}
+
+//////////////////////////////////////
+// template variables
+
+template <typename T>
+const T pi(3.14153453645645654456);
+
+template <class T>
+inline constexpr bool IsIntegral_v = is_integral<T>::value;
+
+TEST_CASE("template variable")
+{
+    std::cout << pi<float> << std::endl;
+}
+
+////////////////////////////////////////////
+// variadic templates
+
+template <typename... Ts>
+struct Row
+{
+    std::tuple<Ts...> data;
+};
+
+namespace BeforeCpp17
+{
+    void print()
     {
-        return width * height;
+        std::cout << "\n";
+    }
+
+    template <typename THead, typename... TTail>
+    void print(const THead& head, const TTail&... tail)
+    {
+        std::cout << head << " ";
+        print(tail...);
+    }
+}
+
+template <typename THead, typename... TTail>
+void print(const THead& head, const TTail&... tail)
+{
+    std::cout << head << " ";
+
+    if constexpr (sizeof...(tail) > 0)
+    {
+        print(tail...);
+    }
+    else
+        std::cout << "\n";
+}
+
+TEST_CASE("variadic templates")
+{
+    Row<int, double, std::string> r1 {{1, 3.14, "test"}};
+
+    print(1, 3.14, "text"s);
+}
+
+void foo(int i, double d, const std::string& s)
+{
+    std::cout << "foo(" << i << ", " << d << ", " << s << ")\n";
+}
+
+template <typename F, typename... TArgs>
+decltype(auto) call(F f, TArgs&&... args)
+{
+    return f(std::forward<TArgs>(args)...);
+}
+
+TEST_CASE("call")
+{
+    call(foo, 1, 3.14, "pi");
+}
+
+//////////////////////////////////////////////////////
+// std::tuples
+
+template <typename TContainer>
+std::tuple<int, int, double> calc_stats(const TContainer& container)
+{
+    // decltype(begin(container)) min_pos, max_pos;
+    // std::tie(min_pos, max_pos) = std::minmax_element(begin(container), end(container));
+
+    auto [min_pos, max_pos] = std::minmax_element(begin(container), end(container)); // since C++17
+    double avg = std::accumulate(begin(container), end(container), 0.0) / std::size(container);
+
+    return {*min_pos, *max_pos, avg};
+}
+
+TEST_CASE("tuples")
+{
+    std::vector<int> vec = {43, 665, 23, 645, 7568, 23, 654, 2, 1};
+
+    {
+        int min, max;
+
+        std::tie(min, max, std::ignore) = calc_stats(vec);
+    }
+
+    auto [min, max, _] = calc_stats(vec); // since C++17
+
+    REQUIRE(min == 1);
+    REQUIRE(max == 7568);
+}
+
+struct Person
+{
+    std::string fname;
+    std::string lname;
+    int age;
+
+    auto tied() const
+    {
+        return std::tie(fname, lname, age);
+    }
+
+    bool operator==(const Person& p) const
+    {
+        return tied() == p.tied();
+    }
+
+    bool operator<(const Person& p) const
+    {
+        return std::tie(fname, lname, age) < std::tie(p.fname, p.lname, p.age);
     }
 };
 
-TEST_CASE("Aggregates")
+TEST_CASE("Person ==")
 {
-    Rectangle r1{10, 20, 45.0};
-    Rectangle r2{50, 5};
-    Rectangle r3{};
+    Person p1{"Jan", "Kowalski", 44};
+    Person p2{"Jan", "Kowalski", 44};
 
-    Rectangle r4 = {1, 4, 45.0};
-
-    static_assert(std::is_aggregate_v<Rectangle>);
-
-    int tab[10] = {};
+    REQUIRE(p1 == p2);
 }
-
-template <typename T, template<typename, typename> class Container>
-class Stack
-{
-public:
-    Container<T, std::allocator<T>> items_;
-};
-
-TEST_CASE("template as template params")
-{
-    Stack<int, std::vector> s1;
-    Stack<int, std::list> s2;
-}
-
-
