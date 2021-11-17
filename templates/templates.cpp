@@ -564,8 +564,81 @@ struct Person
 
 TEST_CASE("Person ==")
 {
-    Person p1{"Jan", "Kowalski", 44};
-    Person p2{"Jan", "Kowalski", 44};
+    Person p1 {"Jan", "Kowalski", 44};
+    Person p2 {"Jan", "Kowalski", 44};
 
     REQUIRE(p1 == p2);
+}
+
+// implementation for non-integral types
+template <typename T, typename = std::enable_if_t<!std::is_integral_v<T>>>
+T calculate(T x)
+{
+    std::cout << "calculate(T: " << x << ")\n";
+
+    return x * x;
+}
+
+// implementation for integral types
+template <typename T, typename = void, typename = std::enable_if_t<std::is_integral_v<T>>>
+int calculate(T x)
+{
+    std::cout << "calculate(integral: " << x << ")\n";
+
+    return x * x;
+}
+
+// std::integral auto calculate(std::integral auto i)
+// {
+//     std::cout << "calculate(integral: " << x << ")\n";
+
+//     return x * x;
+// }
+
+////////
+// type traits
+
+namespace Explain
+{
+    template <typename T>
+    struct IsIntegral
+    {
+        static constexpr bool value = false;
+    };
+
+    template <>
+    struct IsIntegral<int>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct IsIntegral<short>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <>
+    struct IsIntegral<long>
+    {
+        static constexpr bool value = true;
+    };
+
+    template <typename T>
+    constexpr static bool IsIntegral_v = IsIntegral<T>::value;
+}
+
+TEST_CASE("enable_if + traits")
+{
+    int x = 42;
+    calculate(x);
+
+    short s = 42;
+    calculate(s);
+
+    calculate(3.14);
+
+    static_assert(Explain::IsIntegral<double>::value == false);
+    static_assert(Explain::IsIntegral_v<std::string> == false);
+    static_assert(std::is_integral<int>::value);
 }
