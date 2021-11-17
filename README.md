@@ -7,6 +7,7 @@
 ## Dokumentacja + slajdy
 
 * https://infotraining.bitbucket.io/cpp-adv
+* https://infotraining.bitbucket.io/cpp-adv/slides
 
 ## Konfiguracja lokalna - opcja 1
 
